@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun PdfReaderScreen(
@@ -47,7 +48,7 @@ fun PdfReaderScreen(
     // Normal reading mode: controls disappear after 3 seconds.
     LaunchedEffect(showChrome, state.tool) {
         if (showChrome && state.tool == com.example.pdfreader.data.Tool.HAND) {
-            delay(3000)
+            delay(3000.milliseconds)
             showChrome = false
         }
     }

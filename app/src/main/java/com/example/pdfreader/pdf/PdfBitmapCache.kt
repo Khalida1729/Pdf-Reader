@@ -3,24 +3,41 @@ package com.example.pdfreader.pdf
 import android.graphics.Bitmap
 import android.util.LruCache
 
-data class CacheKey(val page: Int, val width: Int)
+data class CacheKey(
+    val documentId: String,
+    val page: Int,
+    val width: Int
+)
 
-/**
- * LruCache size is expressed in the unit returned by sizeOf().
- * Both values below are therefore KB.
- */
-class PdfBitmapCache(maxMemoryPercent: Int = 20) {
-    private val maxCacheKb = (
-            Runtime.getRuntime().maxMemory() / 1024L * maxMemoryPercent / 100L
-            ).toInt().coerceAtLeast(1024)
+class PdfBitmapCache(
+    maxMemoryPercent: Int = 20
+) {
+
+    private val maxCacheKb: Int = (
+            Runtime.getRuntime().maxMemory() / 1024L *
+                    maxMemoryPercent.coerceIn(5, 30) / 100L
+            )
+        .coerceAtLeast(1024L)
+        .coerceAtMost(Int.MAX_VALUE.toLong())
+        .toInt()
 
     private val cache = object : LruCache<CacheKey, Bitmap>(maxCacheKb) {
-        override fun sizeOf(key: CacheKey, value: Bitmap): Int =
-            (value.byteCount / 1024L).toInt().coerceAtLeast(1)
+
+        override fun sizeOf(
+            key: CacheKey,
+            value: Bitmap
+        ): Int {
+            return (value.allocationByteCount / 1024L)
+                .coerceAtLeast(1L)
+                .coerceAtMost(Int.MAX_VALUE.toLong())
+                .toInt()
+        }
     }
 
     @Synchronized
-    fun get(key: CacheKey): Bitmap? = cache.get(key)
+    fun get(key: CacheKey): Bitmap? {
+        return cache.get(key)
+    }
 
     @Synchronized
     fun put(key: CacheKey, bitmap: Bitmap) {
@@ -28,5 +45,7 @@ class PdfBitmapCache(maxMemoryPercent: Int = 20) {
     }
 
     @Synchronized
-    fun clear() = cache.evictAll()
+    fun clear() {
+        cache.evictAll()
+    }
 }
